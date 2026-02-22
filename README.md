@@ -71,7 +71,7 @@ hostname -I
 `scp` (Secure Copy), SSH üzerinden dosya transferi sağlar. Dosyaları göndereceğin makinede (Windows veya başka bir Linux) şu komutu çalıştır:
 
 ```bash
-scp -r C:\temp\linux-x64 user@192.168.1.45:/home/appPath/
+scp -r C:\temp\linux-x64 user@192.168.1.45:/target/directory/
 ```
 
 **Parçalara ayıralım:**
@@ -81,14 +81,14 @@ scp -r C:\temp\linux-x64 user@192.168.1.45:/home/appPath/
 | `-r` | Klasörü alt dosyalarıyla birlikte recursive gönder |
 | `C:\temp\inux-x64` | Göndereceğin kaynak klasör veya dosya |
 | `user@192.168.1.45` | Hedef makinedeki kullanıcı adı ve IP |
-| `:/home/appPath/` | Hedef makinedeki hedef dizin |
+| `:/target/directory/` | Hedef makinedeki hedef dizin |
 
 ### ❌ "No such file or directory" Hatası Alıyorsan
 
 Hedef dizine yazma izni yoktur. Şu komutla izni ver:
 
 ```bash
-sudo chown -R kullanici:kullanici /hedef/dizin
+sudo chown -R user:user /target/directory
 # Örnek:
 sudo chown -R myuser:myuser /home/appPath/
 ```
@@ -152,9 +152,9 @@ Servis dosyasını oluşturmadan önce uygulamanın hangi dizine yerleştirilece
 Bu rehberde `/opt/myapi` dizinini kullanacağız. Dizini oluşturup dosyaları taşı:
 
 ```bash
-sudo mkdir -p /opt/myapi
-sudo cp -r /home/appPath/myapp/* /opt/myapi/
-sudo chown -R www-data:www-data /opt/myapi
+sudo mkdir -p /opt/myapp
+sudo cp -r /home/appPath/myapp/* /opt/myapp/
+sudo chown -R www-data:www-data /opt/myapp
 ```
 
 Veya dosyaları 4. adımda doğrudan ilgili klasöre de aktarabilirsin. 
@@ -173,16 +173,16 @@ Açılan editöre aşağıdaki içeriği yapıştır:
 
 ```ini
 [Unit]
-Description=My .NET 9 API Service
+Description=My .NET 10 API Service
 After=network.target
 
 [Service]
-WorkingDirectory=/opt/myapi
-ExecStart=/usr/bin/dotnet /opt/myapi/MyApi.dll
+WorkingDirectory=/opt/myapp
+ExecStart=/usr/bin/dotnet /opt/myapi/MyApp.dll
 Restart=always
 RestartSec=10
 KillSignal=SIGINT
-SyslogIdentifier=myapi
+SyslogIdentifier=myapp
 User=www-data
 Environment=ASPNETCORE_ENVIRONMENT=Production
 Environment=DOTNET_PRINT_TELEMETRY_MESSAGE=false
@@ -210,7 +210,7 @@ WantedBy=multi-user.target
 
 > 🔴 **WorkerService kullanıcıları dikkat:** `ASPNETCORE_URLS` satırını **kaldır**. WorkerService, HTTP portu dinlemez. Bu satır yalnızca **API ve MVC** gibi web tabanlı uygulamalar içindir.
 
-> 🔐 **`www-data` kullanıcısı hakkında:** Bu, web sunucularının (Nginx, Apache) kullandığı standart düşük yetkili kullanıcıdır. Uygulamayı root yerine bu kullanıcıyla çalıştırmak güvenlik açısından önerilen yaklaşımdır. Eğer uygulaman belirli dosya veya dizinlere erişmesi gerekiyorsa, o dizinlerin sahibini `www-data` yapman gerekebilir: `sudo chown -R www-data:www-data /opt/myapi`
+> 🔐 **`www-data` kullanıcısı hakkında:** Bu, web sunucularının (Nginx, Apache) kullandığı standart düşük yetkili kullanıcıdır. Uygulamayı root yerine bu kullanıcıyla çalıştırmak güvenlik açısından önerilen yaklaşımdır. Eğer uygulaman belirli dosya veya dizinlere erişmesi gerekiyorsa, o dizinlerin sahibini `www-data` yapman gerekebilir: `sudo chown -R www-data:www-data /opt/myapp`
 
 Dosyayı kaydetmek için: **Ctrl + X → Y → Enter**
 
@@ -223,13 +223,13 @@ Dosyayı kaydetmek için: **Ctrl + X → Y → Enter**
 sudo systemctl daemon-reload
 
 # Servisi oluştur (sistem açılışında otomatik başlasın)
-sudo systemctl enable myapi.service
+sudo systemctl enable myapp.service
 
 # Servisi şimdi başlat
-sudo systemctl start myapi.service
+sudo systemctl start myapp.service
 
 # Servisin durumunu kontrol et
-sudo systemctl status myapi.service
+sudo systemctl status myapp.service
 ```
 
 Çıktıda `active (running)` görüyorsan tebrikler, uygulamanı Linux'a başarıyla deploy ettin! 🎉
@@ -240,13 +240,13 @@ sudo systemctl status myapi.service
 
 ```bash
 # Servisi durdur
-sudo systemctl stop myapi.service
+sudo systemctl stop myapp.service
 
 # Servisi yeniden başlat
-sudo systemctl restart myapi.service
+sudo systemctl restart myapp.service
 
 # Canlı logları takip et
-sudo journalctl -u myapi.service -f
+sudo journalctl -u myapp.service -f
 ```
 
 ---
@@ -259,7 +259,7 @@ sudo journalctl -u myapi.service -f
 - [ ] Aynı ağda olduğunu doğrula (ping testi)
 - [ ] `scp` ile dosyaları gönder
 - [ ] `dotnet app.dll` ile test çalıştırması yap
-- [ ] Uygulama dizinini seç ve dosyaları taşı (`/opt/myapi` önerilir)
+- [ ] Uygulama dizinini seç ve dosyaları taşı (`/opt/myapp` önerilir)
 - [ ] `/etc/systemd/system/` altına `.service` dosyasını oluştur
 - [ ] `daemon-reload → enable → start → status` sırasını takip et
 
